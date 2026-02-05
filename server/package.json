@@ -1,0 +1,16 @@
+{
+  "name": "leonardo-websocket-server",
+  "version": "1.0.0",
+  "description": "Servidor WebSocket para chat IA",
+  "main": "chatServer.js",
+  "scripts": {
+    "start": "node chatServer.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "mysql2": "^3.6.3",
+    "socket.io-client": "^4.8.3",
+    "ws": "^8.14.2"
+  }
+}
