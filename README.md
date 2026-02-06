@@ -1,16 +1,28 @@
 # 🎨 LeonardoDB - Database Designer
 
-Database Designer - Diseñador visual de bases de datos MySQL con exportación SQL y migracion laravel
+**Un diseñador moderno de bases de datos self-hosted creado para desarrolladores.**
 
-## Características
+LeonardoDB permite diseñar bases de datos SQL de forma visual, exportar esquemas SQL reales, generar migraciones de Laravel e interactuar con la estructura de la base de datos mediante IA configurable por el usuario.
 
-- Diseño visual interactivo con drag & drop
-- Relaciones entre columnas
-- Gestión de columnas e índices
-- Exportación a SQL
-- Preview SQL con syntax highlighting
-- Exportación a laravel
-- Múltiples proyectos
+Este proyecto fue creado como una potente alternativa abierta a herramientas como DrawSQL, dbdiagram y DBDesigner, pero totalmente local, personalizable y enfocado en desarrolladores.
+
+## Características Principales
+
+- **Diseñador visual de bases de datos en canvas** - Interfaz intuitiva con drag & drop
+- **Exportación SQL** - Compatible con MySQL, esquemas listos para tus proyectos
+- **Generador de migraciones Laravel** - Integración directa con tu flujo de desarrollo
+- **Entorno local en tiempo real** - Sin dependencias de servicios externos
+- **Soporte para IA configurable** - Conecta tu propio proveedor de IA para consultas SQL y análisis
+- **Interfaz moderna** - Construida con Laravel + Vue.js
+- **Self-hosted y código abierto** - Control total sobre tus datos y diseños
+
+### Funcionalidades Avanzadas
+
+- Relaciones visuales entre tablas con conectores interactivos
+- Gestión completa de columnas, tipos de datos e índices
+- Preview SQL en tiempo real con syntax highlighting
+- Soporte para múltiples proyectos simultáneos
+- Preview SQL en tiempo real
 
 ## Requisitos
 
