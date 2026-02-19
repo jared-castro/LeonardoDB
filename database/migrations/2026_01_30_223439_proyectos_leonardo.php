@@ -15,6 +15,7 @@ return new class extends Migration
     $table->string('descripcion', 255);
 
     $table->integer('estado')->default(1);
+    $table->string('tipo_db', 255);
 
     $table->unsignedInteger('id_usuario');
     $table->unsignedInteger('creado_por');

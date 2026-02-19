@@ -7,6 +7,8 @@ import LeonardoIA from '../pages/LeonardoIA.vue'
 import LeonardoAPI from '../pages/LeonardoAPI.vue'
 import LeonardoIA2 from '../pages/LeonardoIA2.vue'
 import PreguntasLeonardo from '../pages/PreguntasLeonardo.vue'
+import LeonardoData2 from '../pages/LeonardoData2.vue'
+import LeonardoData3 from '../pages/LeonardoData3.vue'
 const routes = [
     {
         path: '/',
@@ -32,6 +34,18 @@ const routes = [
     path: '/leonardodata/:id',
     name: 'LeonardoData',
     component: LeonardoData,
+    meta: { requiresAuth: true }
+},
+{
+    path: '/leonardodata2/:id',
+    name: 'LeonardoData2',
+    component: LeonardoData2,
+    meta: { requiresAuth: true }
+},
+{
+    path: '/leonardodata3/:id',
+    name: 'LeonardoData3',
+    component: LeonardoData3,
     meta: { requiresAuth: true }
 },
 {

@@ -26,6 +26,7 @@ class ProyectosLeonardoController extends Controller
             'id_proyecto',
             'nombre',
             'descripcion',
+            'tipo_db',
             'estado',
             'fecha_registro',
             'fecha_modificacion',
@@ -39,6 +40,7 @@ class ProyectosLeonardoController extends Controller
             'id_proyecto'        => $proyecto->id_proyecto,
             'nombre'             => $proyecto->nombre,
             'descripcion'        => $proyecto->descripcion,
+            'tipo_db'            => $proyecto->tipo_db,
             'estado'             => $proyecto->estado,
             'fecha_registro'     => $proyecto->fecha_registro,
             'fecha_modificacion' => $proyecto->fecha_modificacion,
@@ -74,6 +76,7 @@ class ProyectosLeonardoController extends Controller
         $proyecto = Proyecto::create([
             'nombre'        => $request->nombre,
             'descripcion'   => $request->descripcion,
+            'tipo_db'        => $request->tipo_db,
             'estado'        => 1,
             'id_usuario'    => $user->id_usuario,
             'creado_por'    => $user->id_usuario,
@@ -86,6 +89,7 @@ class ProyectosLeonardoController extends Controller
                 'id_proyecto' => $proyecto->id_proyecto,
                 'nombre'      => $proyecto->nombre,
                 'descripcion' => $proyecto->descripcion,
+                'tipo_db'     => $proyecto->tipo_db,
                 'estado'      => $proyecto->estado,
                 'fecha'       => $proyecto->fecha_registro,
             ]

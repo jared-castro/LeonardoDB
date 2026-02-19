@@ -131,7 +131,7 @@
                         <div class="card-header">
                             <div class="card-title" @click="irAProyecto(proyecto.id_proyecto)">
                                 <h3>{{ proyecto.nombre }}</h3>
-                                <span class="tag-sql">SQL</span>
+                                <span class="tag-sql">{{ proyecto.tipo_db || 'SQL' }}</span>
                             </div>
                             <button class="btn-opciones" @click="toggleMenuProyecto(proyecto.id_proyecto)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -237,6 +237,30 @@
                             rows="4"
                         ></textarea>
                         <span class="char-counter">{{ proyecto.descripcion.length }}/250</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de Base de Datos</label>
+                        <div class="estado-buttons">
+                            <button 
+                                class="btn-estado"
+                                :class="{ 'estado-activo': proyecto.tipo_db === 'MYSQL' }"
+                                @click="proyecto.tipo_db = 'MYSQL'"
+                                type="button"
+                            >MYSQL</button>
+                            <button 
+                                class="btn-estado"
+                                :class="{ 'estado-activo': proyecto.tipo_db === 'POSTGRED' }"
+                                @click="proyecto.tipo_db = 'POSTGRED'"
+                                type="button"
+                            >POSTGRED</button>
+                            <button 
+                                class="btn-estado"
+                                :class="{ 'estado-activo': proyecto.tipo_db === 'MONGODB' }"
+                                @click="proyecto.tipo_db = 'MONGODB'"
+                                type="button"
+                            >MONGODB</button>
+                        </div>
                     </div>
                 </div>
 
@@ -505,10 +529,11 @@ export default {
             alertaExito: false,
             mensajeAlerta: '',
             cargando: false,
-            proyecto: {
-                nombre: '',
-                descripcion: ''
-            },
+proyecto: {
+    nombre: '',
+    descripcion: '',
+    tipo_db: 'MYSQL'
+},
         proyectos: [],
         cargandoProyectos: true,
         menuProyectoAbierto: null,
@@ -555,10 +580,11 @@ mounted() {
         },
         abrirModal() {
             this.modalAbierto = true;
-            this.proyecto = {
-                nombre: '',
-                descripcion: ''
-            };
+this.proyecto = {
+    nombre: '',
+    descripcion: '',
+    tipo_db: 'MYSQL'
+};
         },
         cerrarModal() {
             this.modalAbierto = false;
@@ -575,10 +601,11 @@ mounted() {
         const token = localStorage.getItem('token');
         const response = await axios.post(
             '/api/proyectos/crear',
-            {
-                nombre: this.proyecto.nombre,
-                descripcion: this.proyecto.descripcion
-            },
+{
+    nombre: this.proyecto.nombre,
+    descripcion: this.proyecto.descripcion,
+    tipo_db: this.proyecto.tipo_db
+},
             {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -620,7 +647,15 @@ toggleMenuProyecto(idProyecto) {
 },
 
 irAProyecto(idProyecto) {
-    this.$router.push(`/leonardodata/${idProyecto}`);
+    const proyecto = this.proyectos.find(p => p.id_proyecto === idProyecto);
+    const tipo = proyecto?.tipo_db;
+    if (tipo === 'POSTGRED') {
+        this.$router.push(`/leonardodata2/${idProyecto}`);
+    } else if (tipo === 'MONGODB') {
+        this.$router.push(`/leonardodata3/${idProyecto}`);
+    } else {
+        this.$router.push(`/leonardodata/${idProyecto}`);
+    }
 },
 
 formatearFecha(fecha) {

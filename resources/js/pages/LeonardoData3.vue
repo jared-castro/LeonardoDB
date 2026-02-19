@@ -79,7 +79,7 @@
         <line x1="9" y1="13" x2="15" y2="13"></line>
         <line x1="9" y1="17" x2="13" y2="17"></line>
     </svg>
-    Mostrar Canvas SQL
+    Mostrar Canvas MongoDB
 </button>
 
 <button class="menu-exportar-opcion" @click="abrirCanvasLaravel">
@@ -115,7 +115,7 @@
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
-            <h3>SQL Preview</h3>
+            <h3>MongoDB Preview</h3>
             <span class="sql-canvas-badge">{{ proyecto.nombre || '' }}</span>
         </div>
         
@@ -185,7 +185,7 @@
                 <polyline points="2 17 12 22 22 17"></polyline>
                 <polyline points="2 12 12 17 22 12"></polyline>
             </svg>
-            <h3>Laravel Migrations</h3>
+            <h3>Laravel MongoDB</h3>
             <span class="laravel-canvas-badge">{{ proyecto.nombre || '' }}</span>
         </div>
         
@@ -476,19 +476,7 @@
     :class="{ 'row-par': index % 2 === 0 }"
 >
     <!-- PUNTO IZQUIERDO -->
-    <div 
-        :id="`punto-${col.id_columna}`"
-        class="punto-conexion punto-izquierdo"
-       :class="{ 
-    'punto-visible': true,
-    'punto-arrastrando': arrastrandoRelacion && puntoOrigenId === `punto-${col.id_columna}`
-}"
-        :style="{ backgroundColor: tabla.color_tabla || '#8b5cf6' }"
-        @mousedown.stop="onPuntoMouseDown($event, tabla, col, 'izquierdo')"
-        @mouseup.stop="onPuntoMouseUp($event, tabla, col, 'izquierdo')"
-        @mouseenter="e => e.currentTarget.classList.add('punto-hover')"
-        @mouseleave="e => e.currentTarget.classList.remove('punto-hover')"
-    ></div>
+    
     
 <span class="row-icono">
   <i v-if="col.indice_tipo === 'PRIMARY KEY'" class="fas fa-key" title="Primary Key"></i>
@@ -500,19 +488,7 @@
     <span v-if="col.longitud_columna" class="row-longitud">({{ col.longitud_columna }})</span>
     
     <!-- PUNTO DERECHO -->
-    <div 
-        :id="`punto-${col.id_columna}-right`"
-        class="punto-conexion punto-derecho"
-:class="{ 
-    'punto-visible': true,
-    'punto-arrastrando': arrastrandoRelacion && puntoOrigenId === `punto-${col.id_columna}-right`
-}"
-        :style="{ backgroundColor: tabla.color_tabla || '#8b5cf6' }"
-        @mousedown.stop="onPuntoMouseDown($event, tabla, col, 'derecho')"
-        @mouseup.stop="onPuntoMouseUp($event, tabla, col, 'derecho')"
-        @mouseenter="e => e.currentTarget.classList.add('punto-hover')"
-        @mouseleave="e => e.currentTarget.classList.remove('punto-hover')"
-    ></div>
+   
 </div>
                     </div>
                 </div>
@@ -673,6 +649,19 @@
                         <option v-for="idx in indicesTipo" :key="idx" :value="idx">{{ idx }}</option>
                     </select>
                 </div>
+                <div class="campo-columna campo-opcional campo-toggle">
+    <label>Es referencia</label>
+    <div class="toggle-wrap">
+        <input
+            type="checkbox"
+            id="toggle-referencia"
+            class="toggle-input"
+            :checked="nuevaColumna.tipo_columna === 'ObjectId'"
+            @change="nuevaColumna.tipo_columna = $event.target.checked ? 'ObjectId' : ''"
+        />
+        <label for="toggle-referencia" class="toggle-slider"></label>
+    </div>
+</div>
             </div>
 
             <div class="modal-columna-footer">
@@ -721,10 +710,10 @@
                     <span class="info-valor">{{ columnaInfo.longitud_columna }}</span>
                 </div>
 
-                <div class="info-campo" v-if="columnaInfo.cotejamiento_columna">
-                    <span class="info-label">Cotejamiento</span>
-                    <span class="info-valor info-valor-cotejamiento">{{ columnaInfo.cotejamiento_columna }}</span>
-                </div>
+<div class="info-campo" v-if="columnaInfo.tipo_columna === 'ObjectId'">
+    <span class="info-label">Tipo relación</span>
+    <span class="info-valor info-valor-cotejamiento">Referencia (ObjectId)</span>
+</div>
 
                 <div class="info-campo" v-if="columnaInfo.nulo_columna !== null">
                     <span class="info-label">Nulo</span>
@@ -863,6 +852,19 @@
                         <option v-for="idx in indicesTipo" :key="idx" :value="idx">{{ idx }}</option>
                     </select>
                 </div>
+                <div class="campo-columna campo-opcional campo-toggle">
+    <label>Es referencia</label>
+    <div class="toggle-wrap">
+        <input
+            type="checkbox"
+            id="toggle-referencia-editar"
+            class="toggle-input"
+            :checked="columnaEditando?.tipo_columna === 'ObjectId'"
+            @change="columnaEditando.tipo_columna = $event.target.checked ? 'ObjectId' : ''"
+        />
+        <label for="toggle-referencia-editar" class="toggle-slider"></label>
+    </div>
+</div>
             </div>
 
             <div class="modal-columna-footer">
@@ -873,17 +875,7 @@
     </div>
 
     <!-- Popup eliminar relación -->
-<div
-    v-if="popupRelacion"
-    class="popup-relacion"
-    :style="{ left: popupRelacion.x + 'px', top: popupRelacion.y + 'px' }"
->
-    <span class="popup-relacion-texto">¿Eliminar esta relación?</span>
-    <div class="popup-relacion-botones">
-        <button class="btn-popup-cancelar" @click="popupRelacion = null">Cancelar</button>
-        <button class="btn-popup-eliminar" @click="eliminarRelacionPopup">Eliminar</button>
-    </div>
-</div>
+
 
 <div v-if="mostrarModalIndex" class="modal-overlay modal-columna-overlay" @click.self="mostrarModalIndex = false">
     <div class="modal-box modal-columna">
@@ -975,50 +967,34 @@ export default {
     },
     computed: {
         tienelongitud() {
-            const tipos = ['CHAR','VARCHAR','TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','DECIMAL','NUMERIC','BIT'];
-            return tipos.includes(this.nuevaColumna.tipo_columna);
-        },
-        longitudMaxima() {
-            const mapa = {
-                CHAR: 255, VARCHAR: 255,
-                TINYINT: 4, SMALLINT: 6, MEDIUMINT: 9, INT: 11, BIGINT: 20,
-                FLOAT: 24, DOUBLE: 53, DECIMAL: 65, NUMERIC: 65, BIT: 64
-            };
-            return mapa[this.nuevaColumna.tipo_columna] || 255;
-        },
-        tieneCotejamiento() {
-            const tipos = ['CHAR','VARCHAR','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'];
-            return tipos.includes(this.nuevaColumna.tipo_columna);
-        },
-        tieneAutoIncremento() {
-            const tipos = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','DECIMAL','NUMERIC'];
-            return tipos.includes(this.nuevaColumna.tipo_columna);
-        },
+    return false;
+},
+longitudMaxima() {
+    return 0;
+},
+tieneCotejamiento() {
+    return false;
+},
+tieneAutoIncremento() {
+    return false;
+},
         columnaValida() {
             return this.nuevaColumna.nombre_columna.trim() !== ''
                 && this.nuevaColumna.descripcion_columna.trim() !== ''
                 && this.nuevaColumna.tipo_columna !== '';
         },
         tieneColumnaEditarLongitud() {
-            const tipos = ['CHAR','VARCHAR','TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','DECIMAL','NUMERIC','BIT'];
-            return tipos.includes(this.columnaEditando?.tipo_columna);
-        },
-        longitudEditarMaxima() {
-            const mapa = {
-                CHAR: 255, VARCHAR: 255,
-                TINYINT: 4, SMALLINT: 6, MEDIUMINT: 9, INT: 11, BIGINT: 20,
-                FLOAT: 24, DOUBLE: 53, DECIMAL: 65, NUMERIC: 65, BIT: 64
-            };
-            return mapa[this.columnaEditando?.tipo_columna] || 255;
-        },
-        tieneColumnaEditarCotejamiento() {
-            const tipos = ['CHAR','VARCHAR','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'];
-            return tipos.includes(this.columnaEditando?.tipo_columna);
-        },
-        tieneColumnaEditarAutoIncremento() {
-            const tipos = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','DECIMAL','NUMERIC'];
-            return tipos.includes(this.columnaEditando?.tipo_columna);
-        },
+    return false;
+},
+longitudEditarMaxima() {
+    return 0;
+},
+tieneColumnaEditarCotejamiento() {
+    return false;
+},
+tieneColumnaEditarAutoIncremento() {
+    return false;
+},
         columnaEditaValida() {
             if (!this.columnaEditando) return false;
             return this.columnaEditando.nombre_columna.trim() !== ''
@@ -1101,6 +1077,8 @@ export default {
 
             tablaSeleccionada: null,
 
+            tiposRelacion: ['Referencia (ObjectId)', 'Embedding'],
+
             mostrarModalColumna: false,
             tablaColumna: null,
             nuevaColumna: {
@@ -1115,24 +1093,13 @@ export default {
             },
 
             tiposColumna: [
-                { grupo: 'Numéricos', tipos: ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','DECIMAL','NUMERIC','BIT'] },
-                { grupo: 'Texto', tipos: ['CHAR','VARCHAR','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT'] },
-                { grupo: 'Fecha y hora', tipos: ['DATE','DATETIME','TIMESTAMP','TIME','YEAR'] },
-                { grupo: 'Otros', tipos: ['BOOLEAN','BLOB','ENUM','SET','JSON','GEOMETRY','POINT','LINESTRING','POLYGON'] }
-            ],
-            cotejamiientos: [
-                'utf8mb4_unicode_ci',
-                'utf8mb4_0900_ai_ci',
-                'utf8mb4_general_ci',
-                'utf8mb4_bin',
-                'utf8mb4_0900_as_cs',
-                'utf8mb4_spanish_ci',
-                'utf8mb4_roman_ci',
-                'utf8mb4_german2_ci',
-                'utf8mb4_ja_0900_as_cs',
-                'utf8mb4_general_mysql500_ci'
-            ],
-            indicesTipo: ['UNIQUE','PRIMARY KEY','INDEX','FULLTEXT','SPATIAL'],
+    { grupo: 'Básicos', tipos: ['String', 'Number', 'Boolean', 'Date', 'Null'] },
+    { grupo: 'Identificadores', tipos: ['ObjectId'] },
+    { grupo: 'Estructuras', tipos: ['Object', 'Array'] },
+    { grupo: 'Binario y otros', tipos: ['Binary', 'Decimal128', 'Long', 'Double', 'Int32', 'Timestamp', 'Regex', 'JavaScript'] }
+],
+cotejamiientos: [],
+indicesTipo: ['UNIQUE', 'INDEX', 'TEXT', 'HASHED'],
             
             draggingTable: null,
             dragOffsetX: 0,
@@ -1140,7 +1107,8 @@ export default {
 
             jsPlumbInstance: null,
             relaciones: [],
-            relacionesMap: new Map(), 
+            relacionesMap: new Map(),
+            tipoRelacionSeleccionado: 'Referencia (ObjectId)',
 
             arrastrandoRelacion: false,
             puntoOrigenId: null,
@@ -1174,7 +1142,7 @@ mostrarMenuExportar: false,
         if (this.idProyecto) {
             this.cargarProyecto();
             this.cargarTablas();
-            this.cargarRelaciones();
+            //this.cargarRelaciones();
         } else {
             this.$router.push('/leonardoproyectos');
         }
@@ -1340,8 +1308,7 @@ copiarSQL() {
 
 descargarSQLDesdeCanvas() {
     if (!this.sqlGenerado) return;
-    
-    const nombreArchivo = `${this.proyecto.nombre.replace(/\s+/g, '_')}.sql`;
+    const nombreArchivo = `${this.proyecto.nombre.replace(/\s+/g, '_')}.mongodb.js`;
     this.descargarArchivo(this.sqlGenerado, nombreArchivo);
     
     this.mensajeAlerta = 'SQL descargado correctamente';
@@ -1527,264 +1494,138 @@ async abrirCanvasLaravel() {
     },
     
     generarMigracionesLaravel(proyecto, tablas, estructuraCompleta) {
-        let migraciones = '';
-        const fecha = new Date().toLocaleDateString('es-ES');
-        
+    let migraciones = '';
+    const fecha = new Date().toLocaleDateString('es-ES');
 
-        migraciones += `<?php\n\n`;
-        migraciones += `/**\n`;
-        migraciones += ` * =============================================\n`;
-        migraciones += ` * LeonardoDB - Laravel Migrations\n`;
-        migraciones += ` * =============================================\n`;
-        migraciones += ` * Proyecto: ${proyecto.nombre}\n`;
-        migraciones += ` * Descripción: ${proyecto.descripcion || 'Sin descripción'}\n`;
-        migraciones += ` * Generado: ${fecha}\n`;
-        migraciones += ` * Tablas: ${tablas.length}\n`;
-        migraciones += ` * =============================================\n`;
-        migraciones += ` * \n`;
-        migraciones += ` * Instrucciones:\n`;
-        migraciones += ` * 1. Copiar cada migración en un archivo separado\n`;
-        migraciones += ` * 2. Nombrar archivos con formato: YYYY_MM_DD_HHMMSS_create_tabla_table.php\n`;
-        migraciones += ` * 3. Ejecutar: php artisan migrate\n`;
-        migraciones += ` * \n`;
-        migraciones += ` */\n\n`;
-        
-        migraciones += `// =============================================\n`;
-        migraciones += `// MIGRACIONES DE TABLAS\n`;
-        migraciones += `// =============================================\n\n`;
-        
+    migraciones += `<?php\n\n`;
+    migraciones += `/**\n`;
+    migraciones += ` * =============================================\n`;
+    migraciones += ` * LeonardoDB - Laravel Migrations (MongoDB)\n`;
+    migraciones += ` * =============================================\n`;
+    migraciones += ` * Proyecto: ${proyecto.nombre}\n`;
+    migraciones += ` * Descripción: ${proyecto.descripcion || 'Sin descripción'}\n`;
+    migraciones += ` * Generado: ${fecha}\n`;
+    migraciones += ` * Colecciones: ${tablas.length}\n`;
+    migraciones += ` * =============================================\n`;
+    migraciones += ` * \n`;
+    migraciones += ` * Instrucciones:\n`;
+    migraciones += ` * 1. Instalar: composer require mongodb/laravel-mongodb\n`;
+    migraciones += ` * 2. Configurar conexión en config/database.php\n`;
+    migraciones += ` * 3. Copiar cada migración en un archivo separado\n`;
+    migraciones += ` * 4. Nombrar archivos: YYYY_MM_DD_HHMMSS_create_coleccion_collection.php\n`;
+    migraciones += ` * 5. Ejecutar: php artisan migrate\n`;
+    migraciones += ` * \n`;
+    migraciones += ` */\n\n`;
 
-        estructuraCompleta.forEach((item, index) => {
-            migraciones += this.generarMigracionTabla(item, index);
-            migraciones += `\n\n`;
-        });
-        
+    migraciones += `// =============================================\n`;
+    migraciones += `// MIGRACIONES DE COLECCIONES\n`;
+    migraciones += `// =============================================\n\n`;
 
-        const tieneRelaciones = estructuraCompleta.some(item => 
-            item.relaciones && item.relaciones.length > 0
-        );
-        
-        if (tieneRelaciones) {
-            migraciones += `// =============================================\n`;
-            migraciones += `// MIGRACIÓN DE FOREIGN KEYS\n`;
-            migraciones += `// =============================================\n\n`;
-            migraciones += this.generarMigracionForeignKeys(estructuraCompleta, estructuraCompleta.length);
-        }
-        
-        return migraciones;
-    },
+    estructuraCompleta.forEach((item, index) => {
+        migraciones += this.generarMigracionTabla(item, index);
+        migraciones += `\n\n`;
+    });
+
+    return migraciones;
+},
     
     generarMigracionTabla(item, index) {
-        const { tabla, columnas, indices } = item;
-        const nombreClase = this.convertirANombreClase(tabla.nombre_tabla);
-        const timestamp = this.generarTimestampLaravel(index);
-        
-        let codigo = '';
-        codigo += `// Archivo: ${timestamp}_create_${tabla.nombre_tabla}_table.php\n\n`;
-        codigo += `<?php\n\n`;
-        codigo += `use Illuminate\\Database\\Migrations\\Migration;\n`;
-        codigo += `use Illuminate\\Database\\Schema\\Blueprint;\n`;
-        codigo += `use Illuminate\\Support\\Facades\\Schema;\n\n`;
-        codigo += `return new class extends Migration\n`;
-        codigo += `{\n`;
-        codigo += `    /**\n`;
-        codigo += `     * Run the migrations.\n`;
-        codigo += `     */\n`;
-        codigo += `    public function up(): void\n`;
-        codigo += `    {\n`;
-        codigo += `        Schema::create('${tabla.nombre_tabla}', function (Blueprint $table) {\n`;
-        
-    
-columnas.forEach(col => {
-    codigo += this.generarColumnaLaravel(col, columnas, item.relaciones || []);
-});
-        
+    const { tabla, columnas, indices } = item;
+    const timestamp = this.generarTimestampLaravel(index);
 
-        if (indices && indices.length > 0) {
-            codigo += `\n            // Índices compuestos\n`;
-            const columnasIdx = indices.map(idx => idx.columna.nombre_columna);
-            codigo += `            $table->index([${columnasIdx.map(c => `'${c}'`).join(', ')}]);\n`;
+    let codigo = '';
+    codigo += `// Archivo: ${timestamp}_create_${tabla.nombre_tabla}_collection.php\n\n`;
+    codigo += `<?php\n\n`;
+    codigo += `use Illuminate\\Database\\Migrations\\Migration;\n`;
+    codigo += `use MongoDB\\Laravel\\Schema\\Blueprint;\n`;
+    codigo += `use Illuminate\\Support\\Facades\\Schema;\n\n`;
+    codigo += `return new class extends Migration\n`;
+    codigo += `{\n`;
+    codigo += `    protected $connection = 'mongodb';\n\n`;
+    codigo += `    /**\n`;
+    codigo += `     * Run the migrations.\n`;
+    codigo += `     */\n`;
+    codigo += `    public function up(): void\n`;
+    codigo += `    {\n`;
+    codigo += `        Schema::connection('mongodb')->create('${tabla.nombre_tabla}', function (Blueprint $collection) {\n`;
+
+    if (!columnas || columnas.length === 0) {
+        codigo += `            // Colección sin esquema definido\n`;
+    } else {
+        columnas.forEach(col => {
+            codigo += this.generarColumnaLaravel(col, columnas);
+        });
+    }
+
+    // Índices compuestos
+    if (indices && indices.length > 0) {
+        const camposIdx = indices
+            .map(g => g.columna ? `'${g.columna.nombre_columna}'` : null)
+            .filter(Boolean)
+            .join(', ');
+        if (camposIdx) {
+            codigo += `\n            $collection->index([${camposIdx}]);\n`;
         }
-        
-        codigo += `        });\n`;
-        codigo += `    }\n\n`;
-        codigo += `    /**\n`;
-        codigo += `     * Reverse the migrations.\n`;
-        codigo += `     */\n`;
-        codigo += `    public function down(): void\n`;
-        codigo += `    {\n`;
-        codigo += `        Schema::dropIfExists('${tabla.nombre_tabla}');\n`;
-        codigo += `    }\n`;
-        codigo += `};\n`;
-        
-        return codigo;
-    },
+    }
+
+    codigo += `        });\n`;
+    codigo += `    }\n\n`;
+    codigo += `    /**\n`;
+    codigo += `     * Reverse the migrations.\n`;
+    codigo += `     */\n`;
+    codigo += `    public function down(): void\n`;
+    codigo += `    {\n`;
+    codigo += `        Schema::connection('mongodb')->drop('${tabla.nombre_tabla}');\n`;
+    codigo += `    }\n`;
+    codigo += `};\n`;
+
+    return codigo;
+},
     
     generarColumnaLaravel(col, todasColumnas, relaciones = []) {
-        let linea = '            ';
-        const tipo = col.tipo_columna.toUpperCase();
-        
+    let linea = '            ';
+    const tipo = col.tipo_columna;
 
-        const esPrimaryKey = col.indice_tipo === 'PRIMARY KEY';
+    if (tipo === 'ObjectId') {
+        linea += `$collection->index('${col.nombre_columna}')`;
+    } else if (tipo === 'String' || tipo === 'Null') {
+        linea += `$collection->string('${col.nombre_columna}')`;
+    } else if (tipo === 'Number' || tipo === 'Int32' || tipo === 'Long') {
+        linea += `$collection->integer('${col.nombre_columna}')`;
+    } else if (tipo === 'Double' || tipo === 'Decimal128') {
+        linea += `$collection->double('${col.nombre_columna}')`;
+    } else if (tipo === 'Boolean') {
+        linea += `$collection->boolean('${col.nombre_columna}')`;
+    } else if (tipo === 'Date' || tipo === 'Timestamp') {
+        linea += `$collection->date('${col.nombre_columna}')`;
+    } else if (tipo === 'Object') {
+        linea += `$collection->array('${col.nombre_columna}')`;
+    } else if (tipo === 'Array') {
+        linea += `$collection->array('${col.nombre_columna}')`;
+    } else if (tipo === 'Binary') {
+        linea += `$collection->binary('${col.nombre_columna}')`;
+    } else {
+        linea += `$collection->string('${col.nombre_columna}')`;
+    }
 
-        // Detectar si esta columna es origen de una relación
-        const relacionComoOrigen = relaciones.find(rel => 
-            rel.columna_origen && rel.columna_origen.id_columna === col.id_columna
-        );
-        
+    if (col.indice_tipo === 'UNIQUE') linea += `->unique()`;
+    if (col.indice_tipo === 'INDEX') linea += `->index()`;
+    if (col.indice_tipo === 'TEXT') linea += `->sparse()`;
+    if (col.indice_tipo === 'HASHED') linea += `->index('${col.nombre_columna}', ['sparse' => true])`;
 
-        if (esPrimaryKey && (tipo === 'INT' || tipo === 'BIGINT')) {
-        linea += `$table->bigIncrements('${col.nombre_columna}')`;
-        } else if (tipo === 'INT' || tipo === 'INTEGER') {
-            linea += `$table->integer('${col.nombre_columna}')`;
-        } else if (tipo === 'BIGINT') {
-            linea += `$table->bigInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'TINYINT') {
-            linea += `$table->tinyInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'SMALLINT') {
-            linea += `$table->smallInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'MEDIUMINT') {
-            linea += `$table->mediumInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'VARCHAR') {
-            const longitud = col.longitud_columna || 255;
-            linea += `$table->string('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'CHAR') {
-            const longitud = col.longitud_columna || 255;
-            linea += `$table->char('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'TEXT') {
-            linea += `$table->text('${col.nombre_columna}')`;
-        } else if (tipo === 'LONGTEXT') {
-            linea += `$table->longText('${col.nombre_columna}')`;
-        } else if (tipo === 'MEDIUMTEXT') {
-            linea += `$table->mediumText('${col.nombre_columna}')`;
-        } else if (tipo === 'TINYTEXT') {
-            linea += `$table->text('${col.nombre_columna}')`;
-        } else if (tipo === 'DECIMAL' || tipo === 'NUMERIC') {
-            const longitud = col.longitud_columna || '8,2';
-            linea += `$table->decimal('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'FLOAT') {
-            linea += `$table->float('${col.nombre_columna}')`;
-        } else if (tipo === 'DOUBLE') {
-            linea += `$table->double('${col.nombre_columna}')`;
-        } else if (tipo === 'DATE') {
-            linea += `$table->date('${col.nombre_columna}')`;
-        } else if (tipo === 'DATETIME') {
-            linea += `$table->dateTime('${col.nombre_columna}')`;
-        } else if (tipo === 'TIMESTAMP') {
-            linea += `$table->timestamp('${col.nombre_columna}')`;
-        } else if (tipo === 'TIME') {
-            linea += `$table->time('${col.nombre_columna}')`;
-        } else if (tipo === 'YEAR') {
-            linea += `$table->year('${col.nombre_columna}')`;
-        } else if (tipo === 'BOOLEAN' || tipo === 'BOOL') {
-            linea += `$table->boolean('${col.nombre_columna}')`;
-        } else if (tipo === 'JSON') {
-            linea += `$table->json('${col.nombre_columna}')`;
-        } else if (tipo === 'BLOB') {
-            linea += `$table->binary('${col.nombre_columna}')`;
-        } else if (tipo === 'ENUM') {
-            linea += `$table->enum('${col.nombre_columna}', [])`;
-        } else {
+    if (col.descripcion_columna) {
+        const descripcion = col.descripcion_columna.replace(/'/g, "\\'");
+        linea += `->comment('${descripcion}')`;
+    }
 
-            linea += `$table->string('${col.nombre_columna}')`;
-        }
-        
-
-        if (!esPrimaryKey) {
-            if (col.nulo_columna) {
-                linea += `->nullable()`;
-            }
-            
-            if (col.indice_tipo === 'UNIQUE') {
-                linea += `->unique()`;
-            }
-            
-            if (col.indice_tipo === 'INDEX') {
-                linea += `->index()`;
-            }
-            
-            if ((col.auto_incrementar === true || col.auto_incrementar === 1) && !esPrimaryKey) {
-                linea += `->autoIncrement()`;
-            }
-        }
-        
-
-        if (col.descripcion_columna) {
-            const descripcion = col.descripcion_columna.replace(/'/g, "\\'");
-            linea += `->comment('${descripcion}')`;
-        }
-        
-        linea += `;\n`;
-        
-        return linea;
-    },
+    linea += `;\n`;
+    return linea;
+},
     
     generarMigracionForeignKeys(estructuraCompleta, baseIndex) {
-        const timestamp = this.generarTimestampLaravel(baseIndex);
-        let codigo = '';
-        
-        codigo += `// Archivo: ${timestamp}_add_foreign_keys.php\n\n`;
-        codigo += `<?php\n\n`;
-        codigo += `use Illuminate\\Database\\Migrations\\Migration;\n`;
-        codigo += `use Illuminate\\Database\\Schema\\Blueprint;\n`;
-        codigo += `use Illuminate\\Support\\Facades\\Schema;\n\n`;
-        codigo += `return new class extends Migration\n`;
-        codigo += `{\n`;
-        codigo += `    /**\n`;
-        codigo += `     * Run the migrations.\n`;
-        codigo += `     */\n`;
-        codigo += `    public function up(): void\n`;
-        codigo += `    {\n`;
-        
-        estructuraCompleta.forEach(item => {
-            if (item.relaciones && item.relaciones.length > 0) {
-                item.relaciones.forEach(rel => {
-                    const columnaOrigen = rel.columna_origen;
-                    const columnaDestino = rel.columna_destino;
-                    
-                    if (!columnaOrigen || !columnaDestino) return;
-                    if (columnaOrigen.id_tabla !== item.tabla.id_tabla) return;
-                    
-                    const tablaDestino = this.tablas.find(t => t.id_tabla === columnaDestino.id_tabla);
-                    if (!tablaDestino) return;
-                    
-                    codigo += `        Schema::table('${item.tabla.nombre_tabla}', function (Blueprint $table) {\n`;
-                    codigo += `            $table->foreign('${columnaOrigen.nombre_columna}')\n`;
-                    codigo += `                  ->references('${columnaDestino.nombre_columna}')\n`;
-                    codigo += `                  ->on('${tablaDestino.nombre_tabla}')\n`;
-                    codigo += `                  ->onDelete('cascade')\n`;
-                    codigo += `                  ->onUpdate('cascade');\n`;
-                    codigo += `        });\n\n`;
-                });
-            }
-        });
-        
-        codigo += `    }\n\n`;
-        codigo += `    /**\n`;
-        codigo += `     * Reverse the migrations.\n`;
-        codigo += `     */\n`;
-        codigo += `    public function down(): void\n`;
-        codigo += `    {\n`;
-        
-        estructuraCompleta.forEach(item => {
-            if (item.relaciones && item.relaciones.length > 0) {
-                item.relaciones.forEach(rel => {
-                    const columnaOrigen = rel.columna_origen;
-                    if (!columnaOrigen) return;
-                    if (columnaOrigen.id_tabla !== item.tabla.id_tabla) return;
-                    
-                    codigo += `        Schema::table('${item.tabla.nombre_tabla}', function (Blueprint $table) {\n`;
-                    codigo += `            $table->dropForeign(['${columnaOrigen.nombre_columna}']);\n`;
-                    codigo += `        });\n\n`;
-                });
-            }
-        });
-        
-        codigo += `    }\n`;
-        codigo += `};\n`;
-        
-        return codigo;
-    },
+
+    return '';
+},
     
     generarTimestampLaravel(index) {
         const now = new Date();
@@ -2014,7 +1855,7 @@ async exportarBaseDatos() {
         const sql = this.generarSQL(proyecto, tablas, estructura_completa);
 
 
-        this.descargarArchivo(sql, `${proyecto.nombre.replace(/\s+/g, '_')}.sql`);
+        this.descargarArchivo(sql, `${proyecto.nombre.replace(/\s+/g, '_')}.mongodb.js`);
 
         this.mensajeAlerta = 'Base de datos exportada correctamente';
         this.mostrarAlerta = true;
@@ -2031,187 +1872,161 @@ async exportarBaseDatos() {
 },
 
 generarSQL(proyecto, tablas, estructuraCompleta) {
-    let sql = '';
     const fecha = new Date().toLocaleString('es-ES');
     const nombreDB = proyecto.nombre.replace(/\s+/g, '_').toLowerCase();
 
+    let json = '';
 
-    sql += `-- =============================================\n`;
-    sql += `-- LeonardoDB - Database Designer\n`;
-    sql += `-- =============================================\n`;
-    sql += `-- Proyecto: ${proyecto.nombre}\n`;
-    sql += `-- Descripción: ${proyecto.descripcion || 'Sin descripción'}\n`;
-    sql += `-- Generado: ${fecha}\n`;
-    sql += `-- Tablas: ${tablas.length}\n`;
-    sql += `-- =============================================\n\n`;
+    json += `// =============================================\n`;
+    json += `// LeonardoDB - MongoDB Schema\n`;
+    json += `// =============================================\n`;
+    json += `// Proyecto: ${proyecto.nombre}\n`;
+    json += `// Descripción: ${proyecto.descripcion || 'Sin descripción'}\n`;
+    json += `// Generado: ${fecha}\n`;
+    json += `// Colecciones: ${tablas.length}\n`;
+    json += `// =============================================\n\n`;
 
+    json += `// Conectar a la base de datos\n`;
+    json += `use("${nombreDB}");\n\n`;
 
-    sql += `SET FOREIGN_KEY_CHECKS = 0;\n`;
-    sql += `SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";\n`;
-    sql += `SET time_zone = "+00:00";\n\n`;
+    json += `// =============================================\n`;
+    json += `// COLECCIONES Y ESQUEMAS\n`;
+    json += `// =============================================\n\n`;
 
-
-    sql += `-- =============================================\n`;
-    sql += `-- BASE DE DATOS\n`;
-    sql += `-- =============================================\n\n`;
-    sql += `CREATE DATABASE IF NOT EXISTS \`${nombreDB}\`;\n`;
-    sql += `USE \`${nombreDB}\`;\n\n`;
-
-
-    sql += `-- =============================================\n`;
-    sql += `-- TABLAS\n`;
-    sql += `-- =============================================\n\n`;
-    
     estructuraCompleta.forEach(item => {
-        sql += this.generarCreateTable(item.tabla, item.columnas, item.indices);
-        sql += '\n';
+        json += this.generarCreateTable(item.tabla, item.columnas, item.indices);
+        json += '\n';
     });
 
+    json += `// =============================================\n`;
+    json += `// ÍNDICES\n`;
+    json += `// =============================================\n\n`;
 
-    sql += `-- =============================================\n`;
-    sql += `-- FOREIGN KEYS (RELACIONES)\n`;
-    sql += `-- =============================================\n\n`;
-    
-    let hayRelaciones = false;
     estructuraCompleta.forEach(item => {
-        if (item.relaciones && item.relaciones.length > 0) {
-            const fkSQL = this.generarForeignKeys(item.tabla, item.relaciones);
-            if (fkSQL) {
-                sql += fkSQL;
-                hayRelaciones = true;
-            }
+        const indicesSQL = this.generarIndicesMongo(item.tabla, item.columnas, item.indices);
+        if (indicesSQL) json += indicesSQL;
+    });
+
+    json += `// =============================================\n`;
+    json += `// FIN DEL SCRIPT\n`;
+    json += `// =============================================\n`;
+
+    return json;
+},
+
+generarIndicesMongo(tabla, columnas, indices) {
+    if (!columnas || columnas.length === 0) return '';
+
+    let out = '';
+
+    columnas.forEach(col => {
+        if (!col.indice_tipo) return;
+
+        if (col.indice_tipo === 'UNIQUE') {
+            out += `db.${tabla.nombre_tabla}.createIndex(\n`;
+            out += `  { "${col.nombre_columna}": 1 },\n`;
+            out += `  { unique: true, name: "uk_${col.nombre_columna}" }\n`;
+            out += `);\n\n`;
+        } else if (col.indice_tipo === 'INDEX') {
+            out += `db.${tabla.nombre_tabla}.createIndex(\n`;
+            out += `  { "${col.nombre_columna}": 1 },\n`;
+            out += `  { name: "idx_${col.nombre_columna}" }\n`;
+            out += `);\n\n`;
+        } else if (col.indice_tipo === 'TEXT') {
+            out += `db.${tabla.nombre_tabla}.createIndex(\n`;
+            out += `  { "${col.nombre_columna}": "text" },\n`;
+            out += `  { name: "text_${col.nombre_columna}" }\n`;
+            out += `);\n\n`;
+        } else if (col.indice_tipo === 'HASHED') {
+            out += `db.${tabla.nombre_tabla}.createIndex(\n`;
+            out += `  { "${col.nombre_columna}": "hashed" },\n`;
+            out += `  { name: "hashed_${col.nombre_columna}" }\n`;
+            out += `);\n\n`;
         }
     });
-    
-    if (!hayRelaciones) {
-        sql += `-- No hay relaciones definidas\n\n`;
+
+    // Índices compuestos
+    if (indices && indices.length > 0) {
+        const camposIdx = indices
+            .map(g => g.columna ? `"${g.columna.nombre_columna}": 1` : null)
+            .filter(Boolean)
+            .join(', ');
+
+        if (camposIdx) {
+            out += `db.${tabla.nombre_tabla}.createIndex(\n`;
+            out += `  { ${camposIdx} },\n`;
+            out += `  { name: "idx_${tabla.nombre_tabla}_compuesto" }\n`;
+            out += `);\n\n`;
+        }
     }
 
-
-    sql += `-- =============================================\n`;
-    sql += `-- FIN DEL SCRIPT\n`;
-    sql += `-- =============================================\n\n`;
-    sql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
-
-    return sql;
+    return out;
 },
 
 generarCreateTable(tabla, columnas, indices) {
-    let sql = `-- Tabla: ${tabla.nombre_tabla}\n`;
-    sql += `CREATE TABLE IF NOT EXISTS \`${tabla.nombre_tabla}\` (\n`;
-
-
-    const columnasSQL = columnas.map((col, index) => {
-        let colSQL = `  \`${col.nombre_columna}\` `;
-        
-
-        colSQL += this.mapearTipoDato(col);
-        
-
-        colSQL += col.nulo_columna ? ' NULL' : ' NOT NULL';
-        
-
-        const esNumericoEntero = ['TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'BIGINT'].includes(col.tipo_columna.toUpperCase());
-        const esPrimaryKey = col.indice_tipo === 'PRIMARY KEY';
-        
-        if (col.auto_incrementar && esNumericoEntero && esPrimaryKey) {
-            colSQL += ' AUTO_INCREMENT';
-        }
-        
-
-        if (col.descripcion_columna) {
-            colSQL += ` COMMENT '${col.descripcion_columna.replace(/'/g, "''")}'`;
-        }
-        
-        return colSQL;
-    }).join(',\n');
-
-    sql += columnasSQL;
-
-
-    const primaryKeys = columnas.filter(col => col.indice_tipo === 'PRIMARY KEY');
-    if (primaryKeys.length > 0) {
-        sql += `,\n  PRIMARY KEY (${primaryKeys.map(pk => `\`${pk.nombre_columna}\``).join(', ')})`;
+    if (!columnas || columnas.length === 0) {
+        let out = `// Colección: ${tabla.nombre_tabla}\n`;
+        out += `db.createCollection("${tabla.nombre_tabla}");\n\n`;
+        out += `// Esquema de ejemplo:\n`;
+        out += `// db.${tabla.nombre_tabla}.insertOne({});\n`;
+        return out;
     }
 
+    const propiedades = {};
+    const requeridos = [];
 
-    const uniqueKeys = columnas.filter(col => col.indice_tipo === 'UNIQUE');
-    uniqueKeys.forEach(uk => {
-        sql += `,\n  UNIQUE KEY \`uk_${uk.nombre_columna}\` (\`${uk.nombre_columna}\`)`;
+    columnas.forEach(col => {
+        propiedades[col.nombre_columna] = {
+            bsonType: this.mapearTipoDato(col),
+            description: col.descripcion_columna || ''
+        };
+
+        if (!col.nulo_columna) {
+            requeridos.push(col.nombre_columna);
+        }
     });
 
+    const schema = {
+        bsonType: 'object',
+        required: requeridos,
+        properties: propiedades
+    };
 
-    const indexes = columnas.filter(col => col.indice_tipo === 'INDEX');
-    indexes.forEach(idx => {
-        sql += `,\n  KEY \`idx_${idx.nombre_columna}\` (\`${idx.nombre_columna}\`)`;
-    });
+    let out = `// Colección: ${tabla.nombre_tabla}\n`;
+    out += `db.createCollection("${tabla.nombre_tabla}", {\n`;
+    out += `  validator: {\n`;
+    out += `    $jsonSchema: ${JSON.stringify(schema, null, 4).split('\n').map((l, i) => i === 0 ? l : '    ' + l).join('\n')}\n`;
+    out += `  },\n`;
+    out += `  validationLevel: "moderate",\n`;
+    out += `  validationAction: "warn"\n`;
+    out += `});\n`;
 
-
-    const fulltextIndexes = columnas.filter(col => col.indice_tipo === 'FULLTEXT');
-    fulltextIndexes.forEach(ft => {
-        sql += `,\n  FULLTEXT KEY \`ft_${ft.nombre_columna}\` (\`${ft.nombre_columna}\`)`;
-    });
-
-
-    const spatialIndexes = columnas.filter(col => col.indice_tipo === 'SPATIAL');
-    spatialIndexes.forEach(sp => {
-        sql += `,\n  SPATIAL KEY \`sp_${sp.nombre_columna}\` (\`${sp.nombre_columna}\`)`;
-    });
-
-    if (indices && indices.length > 0) {
-
-        const indicesPorTabla = {};
-        indices.forEach(idx => {
-            if (!indicesPorTabla[idx.id_tabla]) {
-                indicesPorTabla[idx.id_tabla] = [];
-            }
-            indicesPorTabla[idx.id_tabla].push(idx);
-        });
-
-
-        Object.values(indicesPorTabla).forEach((grupoIndices, index) => {
-            if (grupoIndices.length > 0) {
-                const columnasIdx = grupoIndices
-                    .map(g => g.columna ? `\`${g.columna.nombre_columna}\`` : null)
-                    .filter(Boolean)
-                    .join(', ');
-                
-                if (columnasIdx) {
-                    sql += `,\n  KEY \`idx_compuesto_${index + 1}\` (${columnasIdx})`;
-                }
-            }
-        });
-    }
-
-    sql += `\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n`;
-
-    return sql;
+    return out;
 },
 
 mapearTipoDato(columna) {
-    let tipo = columna.tipo_columna.toUpperCase();
-    
+    const tipo = columna.tipo_columna;
 
-    if (columna.longitud_columna) {
-        if (['CHAR', 'VARCHAR', 'TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'BIGINT', 
-             'FLOAT', 'DOUBLE', 'DECIMAL', 'NUMERIC', 'BIT'].includes(tipo)) {
-            tipo += `(${columna.longitud_columna})`;
-        }
-    } else {
+    const mapa = {
+        'String': 'string',
+        'Number': 'number',
+        'Boolean': 'bool',
+        'Date': 'date',
+        'ObjectId': 'objectId',
+        'Object': 'object',
+        'Array': 'array',
+        'Binary': 'binData',
+        'Decimal128': 'decimal',
+        'Long': 'long',
+        'Double': 'double',
+        'Int32': 'int',
+        'Timestamp': 'timestamp',
+        'Regex': 'regex',
+        'JavaScript': 'javascript',
+        'Null': 'null'
+    };
 
-        if (tipo === 'INT') tipo = 'INT(11)';
-        if (tipo === 'TINYINT') tipo = 'TINYINT(4)';
-        if (tipo === 'SMALLINT') tipo = 'SMALLINT(6)';
-        if (tipo === 'MEDIUMINT') tipo = 'MEDIUMINT(9)';
-        if (tipo === 'BIGINT') tipo = 'BIGINT(20)';
-    }
-    
-
-    if (columna.cotejamiento_columna && ['CHAR', 'VARCHAR', 'TEXT', 'TINYTEXT', 'MEDIUMTEXT', 'LONGTEXT'].includes(tipo.split('(')[0])) {
-        tipo += ` COLLATE ${columna.cotejamiento_columna}`;
-    }
-    
-    return tipo;
+    return mapa[tipo] || 'string';
 },
 
 agruparIndicesCompuestos(indices, columnas) {
@@ -2220,37 +2035,8 @@ agruparIndicesCompuestos(indices, columnas) {
 },
 
 generarForeignKeys(tabla, relaciones) {
-    if (!relaciones || relaciones.length === 0) return '';
-    
-    let sql = '';
-    let fkCount = 0;
-    
-    relaciones.forEach((rel) => {
-const columnaOrigen = rel.columna_destino;
-const columnaDestino = rel.columna_origen;
-        
-        if (!columnaOrigen || !columnaDestino) return;
-        
 
-        if (columnaOrigen.id_tabla !== tabla.id_tabla) return;
-        
-
-        const tablaDestino = this.tablas.find(t => t.id_tabla === columnaDestino.id_tabla);
-        if (!tablaDestino) return;
-        
-        fkCount++;
-        const constraintName = `fk_${tabla.nombre_tabla}_${columnaOrigen.nombre_columna}`;
-        
-        sql += `-- Relación: ${tabla.nombre_tabla}.${columnaOrigen.nombre_columna} -> ${tablaDestino.nombre_tabla}.${columnaDestino.nombre_columna}\n`;
-        sql += `ALTER TABLE \`${tabla.nombre_tabla}\`\n`;
-        sql += `  ADD CONSTRAINT \`${constraintName}\`\n`;
-        sql += `  FOREIGN KEY (\`${columnaOrigen.nombre_columna}\`)\n`;
-        sql += `  REFERENCES \`${tablaDestino.nombre_tabla}\` (\`${columnaDestino.nombre_columna}\`)\n`;
-        sql += `  ON DELETE CASCADE\n`;
-        sql += `  ON UPDATE CASCADE;\n\n`;
-    });
-    
-    return sql;
+    return '';
 },
 
 descargarArchivo(contenido, nombreArchivo) {
@@ -2489,67 +2275,7 @@ descargarArchivo(contenido, nombreArchivo) {
         },
 
         inicializarJsPlumb() {
-            this.$nextTick(() => {
-                const container = this.$refs.planoContent;
-                if (!container) return;
-
-                this.jsPlumbInstance = newInstance({
-                    container: container,
-                    connector: { type: 'Bezier', options: { curviness: 50 } },
-                    paintStyle: { strokeWidth: 3, stroke: '#8b5cf6' },
-                    endpoint: { type: 'Dot', options: { radius: 0 } },
-                    endpointStyle: { fill: 'transparent' },
-                    hoverPaintStyle: { strokeWidth: 4, stroke: '#a78bfa' },
-                    anchors: ['Center', 'Center']
-                });
-
-                container.addEventListener('mousedown', (e) => {
-    
-                    if (this.arrastrandoRelacion) return;
-                    
-                    let target = e.target;
-                    let connectorEl = null;
-
             
-                    while (target && target !== container) {
-                        if (target.classList && (
-                            target.classList.contains('jtk-connector') || 
-                            target.classList.contains('jtk-overlay') ||
-                            target.tagName === 'path' ||
-                            target.tagName === 'svg'
-                        )) {
-                            connectorEl = target;
-                            break;
-                        }
-                        target = target.parentElement;
-                    }
-
-                    if (!connectorEl) return;
-
-                    let idRelacion = null;
-                    let checkEl = connectorEl;
-                    while (checkEl && checkEl !== container) {
-                        const dataId = checkEl.getAttribute('data-id-relacion');
-                        if (dataId) {
-                            idRelacion = dataId;
-                            break;
-                        }
-                        checkEl = checkEl.parentElement;
-                    }
-
-                    if (!idRelacion) return;
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const rect = this.$refs.workspace.getBoundingClientRect();
-                    this.popupRelacion = {
-                        x: e.clientX - rect.left,
-                        y: e.clientY - rect.top,
-                        id_relacion: parseInt(idRelacion)
-                    };
-                });
-            });
         },
 
         async cargarRelaciones() {
