@@ -1,6 +1,6 @@
 # 🎨 LeonardoDB - Database Designer
 
-# LeonardoDB 3.0
+# LeonardoDB 3.1
 
 **Un diseñador moderno de bases de datos self-hosted creado para desarrolladores.**
 

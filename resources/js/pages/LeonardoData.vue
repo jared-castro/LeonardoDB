@@ -1226,28 +1226,40 @@ mostrarMenuExportar: false,
             }
         },
 
-        async cargarTablas() {
+async cargarTablas() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/data/tablas/${this.idProyecto}`, {
+        const response = await axios.get(`/api/estructura/proyecto/${this.idProyecto}/completo`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-this.tablas = response.data.data;
 
-await Promise.all(
-    this.tablas.map(tabla => Promise.all([
-        this.cargarColumnas(tabla.id_tabla),
-        this.cargarPosicion(tabla.id_tabla),
-        this.cargarIndices(tabla.id_tabla)
-    ]))
-);
+        const estructuraCompleta = response.data.data.estructura_completa;
+
+        this.tablas = estructuraCompleta.map(item => ({
+            ...item.tabla,
+            posicion: item.posicion ? {
+                pos_x: Number(item.posicion.pos_x),
+                pos_y: Number(item.posicion.pos_y)
+            } : null
+        }));
+
+        const nuevasColumnas = {};
+        const nuevosIndices = {};
+
+        estructuraCompleta.forEach(item => {
+            nuevasColumnas[item.tabla.id_tabla] = item.columnas;
+            nuevosIndices[item.tabla.id_tabla] = item.indices;
+        });
+
+        this.columnasTabla = nuevasColumnas;
+        this.indicesTabla = nuevosIndices;
 
         this.$nextTick(() => {
             this.renderizarRelaciones();
         });
 
     } catch (error) {
-
+        console.error('Error al cargar tablas:', error);
     }
 },
 
