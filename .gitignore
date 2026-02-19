@@ -9,6 +9,7 @@
 .phpunit.result.cache
 npm-debug.log
 yarn-error.log
+/server/node_modules
 
 # IDE
 /.idea

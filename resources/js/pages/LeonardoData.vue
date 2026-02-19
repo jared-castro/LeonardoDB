@@ -723,7 +723,7 @@
                     </span>
                 </div>
 
-                <div class="info-campo" v-if="columnaInfo.auto_incrementar">
+                <div class="info-campo" v-if="columnaInfo.auto_incrementar == 1 || columnaInfo.auto_incrementar === true">
                     <span class="info-label">Auto incrementar</span>
                     <span class="info-valor">
                         <span class="info-badge badge-si">Sí</span>
@@ -1120,7 +1120,7 @@ export default {
                 'utf8mb4_ja_0900_as_cs',
                 'utf8mb4_general_mysql500_ci'
             ],
-            indicesTipo: ['UNIQUE','PRIMARY KEY','FULLTEXT','SPATIAL'],
+            indicesTipo: ['UNIQUE','PRIMARY KEY','INDEX','FULLTEXT','SPATIAL'],
             
             draggingTable: null,
             dragOffsetX: 0,
@@ -1579,9 +1579,9 @@ async abrirCanvasLaravel() {
         codigo += `        Schema::create('${tabla.nombre_tabla}', function (Blueprint $table) {\n`;
         
     
-        columnas.forEach(col => {
-            codigo += this.generarColumnaLaravel(col, columnas);
-        });
+columnas.forEach(col => {
+    codigo += this.generarColumnaLaravel(col, columnas, item.relaciones || []);
+});
         
 
         if (indices && indices.length > 0) {
@@ -1604,16 +1604,21 @@ async abrirCanvasLaravel() {
         return codigo;
     },
     
-    generarColumnaLaravel(col, todasColumnas) {
+    generarColumnaLaravel(col, todasColumnas, relaciones = []) {
         let linea = '            ';
         const tipo = col.tipo_columna.toUpperCase();
         
 
         const esPrimaryKey = col.indice_tipo === 'PRIMARY KEY';
+
+        // Detectar si esta columna es origen de una relación
+        const relacionComoOrigen = relaciones.find(rel => 
+            rel.columna_origen && rel.columna_origen.id_columna === col.id_columna
+        );
         
 
-        if (esPrimaryKey && tipo === 'INT') {
-            linea += `$table->id()`;
+        if (esPrimaryKey && (tipo === 'INT' || tipo === 'BIGINT')) {
+        linea += `$table->bigIncrements('${col.nombre_columna}')`;
         } else if (tipo === 'INT' || tipo === 'INTEGER') {
             linea += `$table->integer('${col.nombre_columna}')`;
         } else if (tipo === 'BIGINT') {
@@ -1682,7 +1687,7 @@ async abrirCanvasLaravel() {
                 linea += `->index()`;
             }
             
-            if (col.auto_incrementar && !esPrimaryKey) {
+            if ((col.auto_incrementar === true || col.auto_incrementar === 1) && !esPrimaryKey) {
                 linea += `->autoIncrement()`;
             }
         }
@@ -2205,8 +2210,8 @@ generarForeignKeys(tabla, relaciones) {
     let fkCount = 0;
     
     relaciones.forEach((rel) => {
-        const columnaOrigen = rel.columna_origen;
-        const columnaDestino = rel.columna_destino;
+const columnaOrigen = rel.columna_destino;
+const columnaDestino = rel.columna_origen;
         
         if (!columnaOrigen || !columnaDestino) return;
         

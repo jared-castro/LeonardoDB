@@ -1,5 +1,7 @@
 # 🎨 LeonardoDB - Database Designer
 
+# LeonardoDB 2.0
+
 **Un diseñador moderno de bases de datos self-hosted creado para desarrolladores.**
 
 LeonardoDB permite diseñar bases de datos SQL de forma visual, exportar esquemas SQL reales, generar migraciones de Laravel e interactuar con la estructura de la base de datos mediante IA configurable por el usuario.
