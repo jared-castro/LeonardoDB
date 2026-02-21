@@ -1633,103 +1633,116 @@ columnas.forEach(col => {
     },
     
     generarColumnaLaravel(col, todasColumnas, relaciones = []) {
-        let linea = '            ';
-        const tipo = col.tipo_columna.toUpperCase();
-        
+    let linea = '            ';
+    const tipo = col.tipo_columna.toUpperCase();
 
-        const esPrimaryKey = col.indice_tipo === 'PRIMARY KEY';
+    const esPrimaryKey = col.indice_tipo === 'PRIMARY KEY';
 
-        // Detectar si esta columna es origen de una relación
-        const relacionComoOrigen = relaciones.find(rel => 
-            rel.columna_origen && rel.columna_origen.id_columna === col.id_columna
+    const relacionComoOrigen = relaciones.find(rel => 
+        rel.columna_origen && rel.columna_origen.id_columna === col.id_columna
+    );
+
+    if (relacionComoOrigen) {
+        const tablaDestino = this.tablas.find(t => 
+            t.id_tabla === relacionComoOrigen.columna_destino.id_tabla
         );
-        
-
-        if (esPrimaryKey && (tipo === 'INT' || tipo === 'BIGINT')) {
+        const nombreTablaDestino = tablaDestino ? tablaDestino.nombre_tabla : 'tabla_destino';
+        linea += `$table->foreignId('${col.nombre_columna}')\n`;
+        linea += `              ->constrained('${nombreTablaDestino}')\n`;
+        linea += `              ->cascadeOnDelete()\n`;
+        linea += `              ->cascadeOnUpdate()`;
+    } else if (esPrimaryKey && tipo === 'INT') {
+        linea += `$table->increments('${col.nombre_columna}')`;
+    } else if (esPrimaryKey && tipo === 'BIGINT') {
         linea += `$table->bigIncrements('${col.nombre_columna}')`;
-        } else if (tipo === 'INT' || tipo === 'INTEGER') {
-            linea += `$table->integer('${col.nombre_columna}')`;
-        } else if (tipo === 'BIGINT') {
-            linea += `$table->bigInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'TINYINT') {
-            linea += `$table->tinyInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'SMALLINT') {
-            linea += `$table->smallInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'MEDIUMINT') {
-            linea += `$table->mediumInteger('${col.nombre_columna}')`;
-        } else if (tipo === 'VARCHAR') {
-            const longitud = col.longitud_columna || 255;
-            linea += `$table->string('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'CHAR') {
-            const longitud = col.longitud_columna || 255;
-            linea += `$table->char('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'TEXT') {
-            linea += `$table->text('${col.nombre_columna}')`;
-        } else if (tipo === 'LONGTEXT') {
-            linea += `$table->longText('${col.nombre_columna}')`;
-        } else if (tipo === 'MEDIUMTEXT') {
-            linea += `$table->mediumText('${col.nombre_columna}')`;
-        } else if (tipo === 'TINYTEXT') {
-            linea += `$table->text('${col.nombre_columna}')`;
-        } else if (tipo === 'DECIMAL' || tipo === 'NUMERIC') {
-            const longitud = col.longitud_columna || '8,2';
-            linea += `$table->decimal('${col.nombre_columna}', ${longitud})`;
-        } else if (tipo === 'FLOAT') {
-            linea += `$table->float('${col.nombre_columna}')`;
-        } else if (tipo === 'DOUBLE') {
-            linea += `$table->double('${col.nombre_columna}')`;
-        } else if (tipo === 'DATE') {
-            linea += `$table->date('${col.nombre_columna}')`;
-        } else if (tipo === 'DATETIME') {
-            linea += `$table->dateTime('${col.nombre_columna}')`;
-        } else if (tipo === 'TIMESTAMP') {
-            linea += `$table->timestamp('${col.nombre_columna}')`;
-        } else if (tipo === 'TIME') {
-            linea += `$table->time('${col.nombre_columna}')`;
-        } else if (tipo === 'YEAR') {
-            linea += `$table->year('${col.nombre_columna}')`;
-        } else if (tipo === 'BOOLEAN' || tipo === 'BOOL') {
-            linea += `$table->boolean('${col.nombre_columna}')`;
-        } else if (tipo === 'JSON') {
-            linea += `$table->json('${col.nombre_columna}')`;
-        } else if (tipo === 'BLOB') {
-            linea += `$table->binary('${col.nombre_columna}')`;
-        } else if (tipo === 'ENUM') {
-            linea += `$table->enum('${col.nombre_columna}', [])`;
+    } else if (tipo === 'INT' || tipo === 'INTEGER') {
+        if (col.indice_tipo === 'INDEX' || col.indice_tipo === 'UNIQUE') {
+            linea += `$table->unsignedInteger('${col.nombre_columna}')`;
         } else {
-
-            linea += `$table->string('${col.nombre_columna}')`;
+            linea += `$table->integer('${col.nombre_columna}')`;
         }
-        
-
-        if (!esPrimaryKey) {
-            if (col.nulo_columna) {
-                linea += `->nullable()`;
-            }
-            
-            if (col.indice_tipo === 'UNIQUE') {
-                linea += `->unique()`;
-            }
-            
-            if (col.indice_tipo === 'INDEX') {
-                linea += `->index()`;
-            }
-            
-            if ((col.auto_incrementar === true || col.auto_incrementar === 1) && !esPrimaryKey) {
-                linea += `->autoIncrement()`;
-            }
+    } else if (tipo === 'BIGINT') {
+        if (col.indice_tipo === 'INDEX' || col.indice_tipo === 'UNIQUE') {
+            linea += `$table->unsignedBigInteger('${col.nombre_columna}')`;
+        } else {
+            linea += `$table->bigInteger('${col.nombre_columna}')`;
         }
-        
+    } else if (tipo === 'TINYINT') {
+        linea += `$table->tinyInteger('${col.nombre_columna}')`;
+    } else if (tipo === 'SMALLINT') {
+        linea += `$table->smallInteger('${col.nombre_columna}')`;
+    } else if (tipo === 'MEDIUMINT') {
+        linea += `$table->mediumInteger('${col.nombre_columna}')`;
+    } else if (tipo === 'VARCHAR') {
+        const longitud = col.longitud_columna || 255;
+        linea += `$table->string('${col.nombre_columna}', ${longitud})`;
+    } else if (tipo === 'CHAR') {
+        const longitud = col.longitud_columna || 255;
+        linea += `$table->char('${col.nombre_columna}', ${longitud})`;
+    } else if (tipo === 'TEXT') {
+        linea += `$table->text('${col.nombre_columna}')`;
+    } else if (tipo === 'LONGTEXT') {
+        linea += `$table->longText('${col.nombre_columna}')`;
+    } else if (tipo === 'MEDIUMTEXT') {
+        linea += `$table->mediumText('${col.nombre_columna}')`;
+    } else if (tipo === 'TINYTEXT') {
+        linea += `$table->text('${col.nombre_columna}')`;
+    } else if (tipo === 'DECIMAL' || tipo === 'NUMERIC') {
+        const longitud = col.longitud_columna || '8,2';
+        linea += `$table->decimal('${col.nombre_columna}', ${longitud})`;
+    } else if (tipo === 'FLOAT') {
+        linea += `$table->float('${col.nombre_columna}')`;
+    } else if (tipo === 'DOUBLE') {
+        linea += `$table->double('${col.nombre_columna}')`;
+    } else if (tipo === 'DATE') {
+        linea += `$table->date('${col.nombre_columna}')`;
+    } else if (tipo === 'DATETIME') {
+        linea += `$table->dateTime('${col.nombre_columna}')`;
+    } else if (tipo === 'TIMESTAMP') {
+        linea += `$table->timestamp('${col.nombre_columna}')`;
+    } else if (tipo === 'TIME') {
+        linea += `$table->time('${col.nombre_columna}')`;
+    } else if (tipo === 'YEAR') {
+        linea += `$table->year('${col.nombre_columna}')`;
+    } else if (tipo === 'BOOLEAN' || tipo === 'BOOL') {
+        linea += `$table->boolean('${col.nombre_columna}')`;
+    } else if (tipo === 'JSON') {
+        linea += `$table->json('${col.nombre_columna}')`;
+    } else if (tipo === 'BLOB') {
+        linea += `$table->binary('${col.nombre_columna}')`;
+    } else if (tipo === 'ENUM') {
+        linea += `$table->enum('${col.nombre_columna}', [])`;
+    } else {
+        linea += `$table->string('${col.nombre_columna}')`;
+    }
 
-        if (col.descripcion_columna) {
-            const descripcion = col.descripcion_columna.replace(/'/g, "\\'");
-            linea += `->comment('${descripcion}')`;
+    if (!esPrimaryKey && !relacionComoOrigen) {
+        if (col.nulo_columna) {
+            linea += `->nullable()`;
         }
-        
-        linea += `;\n`;
-        
-        return linea;
-    },
+
+        if (col.indice_tipo === 'UNIQUE') {
+            linea += `->unique()`;
+        }
+
+        if (col.indice_tipo === 'INDEX') {
+            linea += `->index()`;
+        }
+
+        if ((col.auto_incrementar === true || col.auto_incrementar === 1) && !esPrimaryKey) {
+            linea += `->autoIncrement()`;
+        }
+    }
+
+    if (col.descripcion_columna) {
+        const descripcion = col.descripcion_columna.replace(/'/g, "\\'");
+        linea += `->comment('${descripcion}')`;
+    }
+
+    linea += `;\n`;
+
+    return linea;
+},
     
     generarMigracionForeignKeys(estructuraCompleta, baseIndex) {
         const timestamp = this.generarTimestampLaravel(baseIndex);
@@ -2238,8 +2251,8 @@ generarForeignKeys(tabla, relaciones) {
     let fkCount = 0;
     
     relaciones.forEach((rel) => {
-const columnaOrigen = rel.columna_destino;
-const columnaDestino = rel.columna_origen;
+const columnaOrigen = rel.columna_origen;
+const columnaDestino = rel.columna_destino;
         
         if (!columnaOrigen || !columnaDestino) return;
         

@@ -2100,21 +2100,21 @@ generarCreateTable(tabla, columnas, indices) {
 
     const columnasSQL = columnas.map(col => {
         let colSQL = `  "${col.nombre_columna}" `;
-        colSQL += this.mapearTipoDato(col);
+const esPK = col.indice_tipo === 'PRIMARY KEY' || 
+             ['SERIAL','BIGSERIAL','SMALLSERIAL'].includes(col.tipo_columna?.toUpperCase());
 
-        if (col.indice_tipo === 'PRIMARY KEY') {
-            colSQL += ' PRIMARY KEY';
-        }
+colSQL += this.mapearTipoDato(col);
 
-        colSQL += col.nulo_columna ? '' : ' NOT NULL';
-
-        if (col.descripcion_columna) {
-            // El comment en PostgreSQL va aparte, lo guardamos para después
-        }
+if (esPK) {
+    colSQL += ' PRIMARY KEY';
+} else if (col.nulo_columna == 1 || col.nulo_columna === true) {
+    colSQL += ' NULL';
+} else {
+    colSQL += ' NOT NULL';
+}
 
         return colSQL;
     });
-
 
     const uniques = columnas.filter(col => col.indice_tipo === 'UNIQUE');
     uniques.forEach(uk => {
@@ -2124,19 +2124,16 @@ generarCreateTable(tabla, columnas, indices) {
     sql += columnasSQL.join(',\n');
     sql += `\n);\n`;
 
-
     columnas.forEach(col => {
         if (col.descripcion_columna) {
             sql += `COMMENT ON COLUMN "${tabla.nombre_tabla}"."${col.nombre_columna}" IS '${col.descripcion_columna.replace(/'/g, "''")}';\n`;
         }
     });
 
-
     const indexes = columnas.filter(col => col.indice_tipo === 'INDEX');
     indexes.forEach(idx => {
         sql += `CREATE INDEX "idx_${tabla.nombre_tabla}_${idx.nombre_columna}" ON "${tabla.nombre_tabla}" ("${idx.nombre_columna}");\n`;
     });
-
 
     if (indices && indices.length > 0) {
         const columnasIdx = indices
@@ -2153,13 +2150,15 @@ generarCreateTable(tabla, columnas, indices) {
 
 mapearTipoDato(columna) {
     let tipo = columna.tipo_columna.toUpperCase();
-    const esPK = columna.indice_tipo === 'PRIMARY KEY';
+    const esPK = columna.indice_tipo === 'PRIMARY KEY' ||
+                 ['SERIAL', 'BIGSERIAL', 'SMALLSERIAL'].includes(tipo);
 
     if (esPK) {
         if (tipo === 'INTEGER' || tipo === 'SMALLINT') return 'SERIAL';
         if (tipo === 'BIGINT') return 'BIGSERIAL';
         if (tipo === 'SERIAL') return 'SERIAL';
         if (tipo === 'BIGSERIAL') return 'BIGSERIAL';
+        if (tipo === 'SMALLSERIAL') return 'SMALLSERIAL';
     }
 
     if (['CHAR','VARCHAR'].includes(tipo) && columna.longitud_columna) {
@@ -2188,8 +2187,8 @@ generarForeignKeys(tabla, relaciones) {
     let sql = '';
 
     relaciones.forEach(rel => {
-        const columnaOrigen = rel.columna_destino;
-        const columnaDestino = rel.columna_origen;
+const columnaOrigen = rel.columna_origen;
+const columnaDestino = rel.columna_destino;
 
         if (!columnaOrigen || !columnaDestino) return;
         if (columnaOrigen.id_tabla !== tabla.id_tabla) return;

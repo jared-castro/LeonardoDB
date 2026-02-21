@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\LeonardoApiController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ProyectoEstructuraController;
 use App\Http\Controllers\Api\EstructuraCompleta;
+use App\Http\Controllers\Api\ImportarController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -46,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posicion/ver/{id_tabla}', [PosisionController::class, 'ver_posicion']);
 
 Route::get('/estructura/proyecto/{id}/completo', [EstructuraCompleta::class, 'obtenerContextoProyecto']);
-
+Route::middleware('auth:sanctum')->post('/importar/db', [ImportarController::class, 'importar']);
     Route::post('/relaciones/crear', [LeonardoRelacionController::class, 'crear']);
     Route::get('/relaciones/proyecto/{id_proyecto}', [LeonardoRelacionController::class, 'ver_por_proyecto']);
     Route::delete('/relaciones/eliminar/{id_relacion}', [LeonardoRelacionController::class, 'eliminar']);

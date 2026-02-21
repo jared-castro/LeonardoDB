@@ -34,6 +34,15 @@
                 </div>
 
                 <div class="nav-actions">
+                    <button class="btn-importar" @click="mostrarModalImportar = true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Importar DB</span>
+                    </button>
+
                     <button class="btn-crear-diagrama" @click="abrirModal">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -200,6 +209,128 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Importar DB -->
+<div v-if="mostrarModalImportar" class="modal-overlay" @click="mostrarModalImportar = false">
+    <div class="modal-container" @click.stop>
+        <div class="modal-header">
+            <h3>Importar Base de Datos</h3>
+            <button class="btn-close" @click="mostrarModalImportar = false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Columna izquierda -->
+            <div style="display:flex; gap:24px; align-items:flex-start;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+                    <div class="form-group">
+                        <label>Tipo de Base de Datos</label>
+                        <div class="estado-buttons">
+                            <button 
+                                class="btn-estado"
+                                :class="{ 'estado-activo': importarTipoDB === 'MYSQL' }"
+                                @click="importarTipoDB = 'MYSQL'; importarContenidoSQL = ''; importarNombreArchivo = ''; errorArchivo = ''"
+                                type="button"
+                            >MYSQL</button>
+                            <button 
+                                class="btn-estado"
+                                :class="{ 'estado-activo': importarTipoDB === 'POSTGRED' }"
+                                @click="importarTipoDB = 'POSTGRED'; importarContenidoSQL = ''; importarNombreArchivo = ''; errorArchivo = ''"
+                                type="button"
+                            >POSTGRESQL</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre del Proyecto</label>
+                        <input 
+                            type="text" 
+                            v-model="importarNombre" 
+                            maxlength="250"
+                            placeholder="Nombre para el proyecto importado"
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descripción (opcional)</label>
+                        <input 
+                            type="text" 
+                            v-model="importarDescripcion" 
+                            maxlength="250"
+                            placeholder="Descripción del proyecto"
+                            class="form-input"
+                        >
+                    </div>
+                </div>
+
+                <!-- Divisor -->
+                <div style="width:1px; background:rgba(255,255,255,0.1); align-self:stretch;"></div>
+
+                <!-- Columna derecha -->
+                <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+                    <template v-if="importarTipoDB">
+                        <div class="form-group">
+                            <label>
+                                Archivo .sql 
+                                <span style="color:#888; font-size:12px;">
+                                    (solo archivos .sql de {{ importarTipoDB }})
+                                </span>
+                            </label>
+                            <div 
+                                class="drop-area"
+                                @click="$refs.archivoInput.click()"
+                                @dragover.prevent
+                                @drop.prevent="onDropArchivo"
+                                style="height: 160px; display:flex; flex-direction:column; align-items:center; justify-content:center;"
+                            >
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p v-if="!importarNombreArchivo" style="margin-top:10px;">Haz clic o arrastra tu archivo .sql aquí</p>
+                                <p v-else class="archivo-seleccionado" style="margin-top:10px;">✓ {{ importarNombreArchivo }}</p>
+                            </div>
+                            <input 
+                                ref="archivoInput"
+                                type="file" 
+                                accept=".sql"
+                                style="display:none"
+                                @change="onArchivoImportar"
+                            >
+                            <p v-if="errorArchivo" class="error-archivo">{{ errorArchivo }}</p>
+                        </div>
+                    </template>
+                    <div v-else style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555; text-align:center; gap:12px;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Selecciona primero el tipo de base de datos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancelar" @click="mostrarModalImportar = false">Cancelar</button>
+            <button 
+                class="btn-crear" 
+                @click="importarDB" 
+                :disabled="importando || !importarContenidoSQL || !importarNombre || !importarTipoDB"
+            >
+                <span v-if="!importando">Importar DB</span>
+                <span v-else>Importando...</span>
+            </button>
+        </div>
+    </div>
+</div>
 
         <!-- Modal Crear Proyecto -->
         <div v-if="modalAbierto" class="modal-overlay" @click="cerrarModal">
@@ -528,6 +659,14 @@ export default {
             modalAbierto: false,
             alertaExito: false,
             mensajeAlerta: '',
+            mostrarModalImportar: false,
+            errorArchivo: '',
+importarTipoDB: '',
+importarNombre: '',
+importarDescripcion: '',
+importarContenidoSQL: '',
+importarNombreArchivo: '',
+importando: false,
             cargando: false,
 proyecto: {
     nombre: '',
@@ -655,6 +794,91 @@ irAProyecto(idProyecto) {
         this.$router.push(`/leonardodata3/${idProyecto}`);
     } else {
         this.$router.push(`/leonardodata/${idProyecto}`);
+    }
+},
+
+onArchivoImportar(event) {
+    const archivo = event.target.files[0];
+    if (!archivo) return;
+    this.errorArchivo = '';
+
+    if (!archivo.name.endsWith('.sql')) {
+        this.errorArchivo = 'Solo se permiten archivos .sql';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const contenido = e.target.result;
+        if (this.importarTipoDB === 'MYSQL') {
+            const esMysql = /ENGINE\s*=/i.test(contenido) || /AUTO_INCREMENT/i.test(contenido);
+            const esPostgre = /SERIAL|BIGSERIAL|CREATE\s+SEQUENCE/i.test(contenido);
+            if (esPostgre && !esMysql) {
+                this.errorArchivo = 'Este archivo parece ser PostgreSQL, no MySQL. Cambia el tipo seleccionado.';
+                this.importarContenidoSQL = '';
+                this.importarNombreArchivo = '';
+                return;
+            }
+        } else if (this.importarTipoDB === 'POSTGRED') {
+            const esPostgre = /SERIAL|BIGSERIAL|CREATE\s+SEQUENCE/i.test(contenido);
+            const esMysql = /ENGINE\s*=/i.test(contenido) || /AUTO_INCREMENT/i.test(contenido);
+            if (esMysql && !esPostgre) {
+                this.errorArchivo = 'Este archivo parece ser MySQL, no PostgreSQL. Cambia el tipo seleccionado.';
+                this.importarContenidoSQL = '';
+                this.importarNombreArchivo = '';
+                return;
+            }
+        }
+
+        this.importarContenidoSQL = contenido;
+        this.importarNombreArchivo = archivo.name;
+    };
+    reader.readAsText(archivo);
+},
+
+onDropArchivo(event) {
+    const archivo = event.dataTransfer.files[0];
+    if (!archivo) return;
+    this.onArchivoImportar({ target: { files: [archivo] } });
+},
+
+async importarDB() {
+    if (!this.importarContenidoSQL || !this.importarNombre) return;
+
+    this.importando = true;
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post('/api/importar/db', {
+            sql:         this.importarContenidoSQL,
+            tipo_db:     this.importarTipoDB,
+            nombre:      this.importarNombre,
+            descripcion: this.importarDescripcion
+        }, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+            const tipoUsado = this.importarTipoDB;
+            this.mostrarModalImportar = false;
+            this.importarNombre = '';
+            this.importarDescripcion = '';
+            this.importarContenidoSQL = '';
+            this.importarNombreArchivo = '';
+            this.importarTipoDB = '';
+            this.mostrarAlerta('Base de datos importada exitosamente');
+            this.cargarProyectos();
+
+    const ruta = tipoUsado === 'POSTGRED'
+                ? `/leonardodata2/${response.data.id_proyecto}`
+                : `/leonardodata/${response.data.id_proyecto}`;
+            this.$router.push(ruta);
+        }
+
+    } catch (error) {
+        console.error('Error al importar:', error);
+        this.mostrarAlerta('Error al importar la base de datos');
+    } finally {
+        this.importando = false;
     }
 },
 
@@ -2120,5 +2344,49 @@ irAAPIKeys() {
 .fecha svg {
     opacity: 0.7;
     flex-shrink: 0;
+}
+
+.btn-importar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.btn-importar:hover {
+    background: rgba(255,255,255,0.1);
+}
+.drop-area {
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #aaa;
+}
+.drop-area:hover {
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.03);
+}
+.archivo-seleccionado {
+    color: #4ade80;
+    font-weight: 500;
+}
+.error-archivo {
+    color: #f87171;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.modal-historial, .modal-container {
+    max-width: 760px !important;
+    width: 90vw !important;
 }
 </style>

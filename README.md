@@ -1,6 +1,6 @@
 # 🎨 LeonardoDB - Database Designer
 
-# LeonardoDB 3.1
+# LeonardoDB 4.0
 
 **Un diseñador moderno de bases de datos self-hosted creado para desarrolladores.**
 
@@ -8,11 +8,6 @@ LeonardoDB permite diseñar bases de datos de forma visual, exportar esquemas re
 
 Este proyecto fue creado como una potente alternativa abierta a herramientas como DrawSQL, dbdiagram y DBDesigner, pero totalmente local, personalizable y enfocado en desarrolladores.
 
-## ¿Qué hay de nuevo en 3.0?
-
-- **Soporte para PostgreSQL** - Diseña, exporta esquemas `.postgresql.sql` y genera migraciones Laravel adaptadas a PostgreSQL con tipos nativos como `SERIAL`, `BIGSERIAL`, `JSONB`, `UUID` y más
-- **Soporte para MongoDB** - Diseña colecciones, exporta esquemas `.mongodb.js` con validación `$jsonSchema` y genera migraciones Laravel usando el paquete `mongodb/laravel-mongodb`
-- **Multi-motor** - Elige entre MySQL, PostgreSQL y MongoDB según tu proyecto, cada uno con su propio canvas de preview y exportación
 
 ## Características Principales
 
@@ -32,7 +27,7 @@ Este proyecto fue creado como una potente alternativa abierta a herramientas com
 - Preview en tiempo real con syntax highlighting para SQL, PostgreSQL y MongoDB
 - Soporte para múltiples proyectos simultáneos
 - Barra de búsqueda de tablas en el sidebar
-- Contador de tablas por proyecto
+- Importacion postgreSQL y Mysql
 
 ## Motores Soportados
 
